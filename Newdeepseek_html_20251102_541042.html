@@ -10,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@1.1.0"></script>
     <style>
+        /* All previous CSS remains exactly the same */
         * {
             margin: 0;
             padding: 0;
@@ -882,6 +883,8 @@
             width: 100%;
             max-width: 400px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .modal-header {
@@ -950,6 +953,101 @@
 
         .profile-actions .btn {
             flex: 1;
+        }
+
+        /* Auto Trading Settings */
+        .settings-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--card-border);
+        }
+
+        .settings-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .settings-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .setting-label {
+            font-size: 14px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #252b40;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        .timeframe-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .timeframe-option {
+            padding: 6px 10px;
+            background-color: #252b40;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .timeframe-option.active {
+            background-color: var(--primary);
         }
 
         /* iOS-specific optimizations */
@@ -1274,11 +1372,11 @@
                             <select class="control-input" id="leverageSelect">
                                 <option>1x</option>
                                 <option>3x</option>
-                                <option selected>5x</option>
+                                <option>5x</option>
                                 <option>10x</option>
                                 <option>25x</option>
                                 <option>50x</option>
-                                <option>100x</option>
+                                <option selected>100x</option>
                             </select>
                         </div>
                         <div class="control-group">
@@ -1295,7 +1393,7 @@
                             <i class="fas fa-play"></i> EXECUTE
                         </button>
                         <button class="btn btn-outline" id="autoSetupBtn" style="flex: 1;">
-                            <i class="fas fa-robot"></i> AUTO
+                            <i class="fas fa-cog"></i> AUTO SETTINGS
                         </button>
                     </div>
                     <div style="margin-top: 15px; padding: 12px; background-color: #252b40; border-radius: 8px;">
@@ -1471,6 +1569,86 @@
         </div>
     </div>
 
+    <!-- Auto Trading Settings Modal -->
+    <div class="modal-overlay" id="autoTradingModal" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Auto Trading Settings</div>
+                <button class="close-modal" id="closeAutoTradingModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="profile-form">
+                <div class="settings-group">
+                    <div class="setting-row">
+                        <div class="setting-label">Enable Auto Trading</div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="autoTradingToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-label">Trade Amount (USD)</div>
+                        <input type="number" class="form-input" id="autoTradeAmount" value="1000" style="width: 100px;">
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-label">Leverage</div>
+                        <select class="form-input" id="autoTradeLeverage" style="width: 100px;">
+                            <option>1x</option>
+                            <option>3x</option>
+                            <option>5x</option>
+                            <option>10x</option>
+                            <option>25x</option>
+                            <option>50x</option>
+                            <option selected>100x</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <div class="settings-title">Timeframe Filter</div>
+                    <div class="setting-row">
+                        <div class="setting-label">Filter by Timeframe</div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="timeframeFilterToggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="timeframe-selector" id="timeframeSelector">
+                        <div class="timeframe-option active" data-timeframe="1m">1m</div>
+                        <div class="timeframe-option active" data-timeframe="5m">5m</div>
+                        <div class="timeframe-option active" data-timeframe="15m">15m</div>
+                        <div class="timeframe-option" data-timeframe="1H">1H</div>
+                        <div class="timeframe-option" data-timeframe="4H">4H</div>
+                        <div class="timeframe-option" data-timeframe="1D">1D</div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <div class="settings-title">Signal Strength Filter</div>
+                    <div class="setting-row">
+                        <div class="setting-label">Minimum Strength</div>
+                        <select class="form-input" id="strengthFilter" style="width: 120px;">
+                            <option value="all">All Signals</option>
+                            <option value="strong">Strong Only</option>
+                            <option value="medium" selected>Medium & Strong</option>
+                            <option value="weak">Any Strength</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="profile-actions">
+                    <button class="btn btn-danger" id="disableAutoTradingBtn">
+                        <i class="fas fa-stop-circle"></i> Disable Auto
+                    </button>
+                    <button class="btn btn-primary" id="saveAutoTradingBtn">
+                        <i class="fas fa-save"></i> Save Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="notification" id="notification">
         <span id="notificationText">Notification message</span>
     </div>
@@ -1492,6 +1670,16 @@
                 this.chart = null;
                 this.signalFilter = 'all';
                 
+                // Auto trading settings - UPDATED: 100x leverage and multiple timeframes
+                this.autoTrading = {
+                    enabled: false,
+                    amount: 1000,
+                    leverage: 100, // CHANGED: 100x leverage
+                    timeframeFilter: true, // CHANGED: Enabled by default
+                    selectedTimeframes: ['1m', '5m', '15m'], // CHANGED: Multiple timeframes selected
+                    minStrength: 'medium'
+                };
+                
                 // Profile data
                 this.profile = {
                     name: 'Trader',
@@ -1510,7 +1698,7 @@
                 this.initializeCharts();
                 this.initializeMarketData();
                 this.initializePaperTrading();
-                this.initializeLeaderboard();
+                this.initializeLeaderboard(); // UPDATED: Functional leaderboard
                 this.initializeSignals();
                 this.updateUI();
                 
@@ -1520,6 +1708,118 @@
                 this.showNotification('AI Trading Bot initialized successfully!');
             }
             
+            // UPDATED: Functional leaderboard with real user data
+            initializeLeaderboard() {
+                // Load leaderboard from localStorage or initialize with user data
+                const savedLeaderboard = localStorage.getItem('tradingBotLeaderboard');
+                
+                if (savedLeaderboard) {
+                    try {
+                        this.leaderboardData = JSON.parse(savedLeaderboard);
+                    } catch (e) {
+                        console.error('Error loading leaderboard:', e);
+                        this.createDefaultLeaderboard();
+                    }
+                } else {
+                    this.createDefaultLeaderboard();
+                }
+                
+                this.updateLeaderboard();
+            }
+            
+            createDefaultLeaderboard() {
+                // Start with current user only
+                const userPnL = this.calculateUserPnL();
+                this.leaderboardData = [
+                    { 
+                        rank: 1, 
+                        name: this.profile.name, 
+                        pnl: userPnL,
+                        isCurrentUser: true 
+                    }
+                ];
+                this.saveLeaderboard();
+            }
+            
+            calculateUserPnL() {
+                // Calculate total PnL from trade history and open positions
+                const realizedPnL = this.tradeHistory.reduce((sum, trade) => sum + trade.pnl, 0);
+                const unrealizedPnL = this.openPositions.reduce((sum, position) => sum + position.pnl, 0);
+                return realizedPnL + unrealizedPnL;
+            }
+            
+            // UPDATED: Save leaderboard data
+            saveLeaderboard() {
+                try {
+                    // Update current user's PnL
+                    const userIndex = this.leaderboardData.findIndex(trader => trader.isCurrentUser);
+                    if (userIndex !== -1) {
+                        this.leaderboardData[userIndex].pnl = this.calculateUserPnL();
+                        this.leaderboardData[userIndex].name = this.profile.name;
+                    } else {
+                        // Add current user if not found
+                        this.leaderboardData.push({
+                            rank: this.leaderboardData.length + 1,
+                            name: this.profile.name,
+                            pnl: this.calculateUserPnL(),
+                            isCurrentUser: true
+                        });
+                    }
+                    
+                    // Sort by PnL (descending) and update ranks
+                    this.leaderboardData.sort((a, b) => b.pnl - a.pnl);
+                    this.leaderboardData.forEach((trader, index) => {
+                        trader.rank = index + 1;
+                    });
+                    
+                    localStorage.setItem('tradingBotLeaderboard', JSON.stringify(this.leaderboardData));
+                } catch (e) {
+                    console.error('Error saving leaderboard:', e);
+                }
+            }
+            
+            // UPDATED: Improved leaderboard display
+            updateLeaderboard() {
+                const container = document.getElementById('leaderboardList');
+                container.innerHTML = '';
+                
+                // Update leaderboard data before displaying
+                this.saveLeaderboard();
+                
+                if (this.leaderboardData.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">No traders yet</div>';
+                    return;
+                }
+                
+                this.leaderboardData.forEach(trader => {
+                    const pnlClass = trader.pnl >= 0 ? 'positive' : 'negative';
+                    const pnlSign = trader.pnl >= 0 ? '+' : '';
+                    
+                    const item = document.createElement('div');
+                    item.className = `leaderboard-item ${trader.isCurrentUser ? 'current-user' : ''}`;
+                    
+                    if (trader.isCurrentUser) {
+                        item.style.backgroundColor = 'rgba(6, 102, 214, 0.1)';
+                        item.style.borderRadius = '8px';
+                        item.style.margin = '2px 0';
+                        item.style.padding = '0 5px';
+                    }
+                    
+                    item.innerHTML = `
+                        <div style="display: flex; align-items: center;">
+                            <div class="leaderboard-rank">${trader.rank}</div>
+                            <div class="leaderboard-name">
+                                ${trader.name} 
+                                ${trader.isCurrentUser ? '<span style="color: var(--primary); font-size: 10px;">(You)</span>' : ''}
+                            </div>
+                        </div>
+                        <div class="leaderboard-pnl ${pnlClass}">${pnlSign}$${trader.pnl.toFixed(2)}</div>
+                    `;
+                    
+                    container.appendChild(item);
+                });
+            }
+
             // Load profile from localStorage
             loadProfile() {
                 const savedProfile = localStorage.getItem('tradingBotProfile');
@@ -1549,6 +1849,12 @@
                             }));
                         }
                         
+                        // Load auto trading settings
+                        const savedAutoSettings = localStorage.getItem('tradingBotAutoSettings');
+                        if (savedAutoSettings) {
+                            this.autoTrading = { ...this.autoTrading, ...JSON.parse(savedAutoSettings) };
+                        }
+                        
                         this.showNotification(`Welcome back, ${this.profile.name}!`);
                     } catch (e) {
                         console.error('Error loading profile:', e);
@@ -1563,6 +1869,8 @@
                     localStorage.setItem('tradingBotBalance', this.paperBalance.toString());
                     localStorage.setItem('tradingBotPositions', JSON.stringify(this.openPositions));
                     localStorage.setItem('tradingBotHistory', JSON.stringify(this.tradeHistory));
+                    localStorage.setItem('tradingBotAutoSettings', JSON.stringify(this.autoTrading));
+                    this.saveLeaderboard(); // Also save leaderboard
                     this.showNotification('Profile saved successfully!');
                 } catch (e) {
                     console.error('Error saving profile:', e);
@@ -1577,6 +1885,8 @@
                     localStorage.removeItem('tradingBotBalance');
                     localStorage.removeItem('tradingBotPositions');
                     localStorage.removeItem('tradingBotHistory');
+                    localStorage.removeItem('tradingBotAutoSettings');
+                    localStorage.removeItem('tradingBotLeaderboard');
                     
                     // Reset to defaults
                     this.profile = {
@@ -1588,8 +1898,18 @@
                     this.paperBalance = 10000.00;
                     this.openPositions = [];
                     this.tradeHistory = [];
+                    this.autoTrading = {
+                        enabled: false,
+                        amount: 1000,
+                        leverage: 100,
+                        timeframeFilter: true,
+                        selectedTimeframes: ['1m', '5m', '15m'],
+                        minStrength: 'medium'
+                    };
+                    this.leaderboardData = [];
                     
                     this.updateTradingUI();
+                    this.updateLeaderboard();
                     this.showNotification('Profile deleted successfully');
                     
                     // Close modal
@@ -1610,6 +1930,16 @@
                 const closeProfileModal = document.getElementById('closeProfileModal');
                 const saveProfileBtn = document.getElementById('saveProfileBtn');
                 const deleteProfileBtn = document.getElementById('deleteProfileBtn');
+                
+                // Auto trading modal elements
+                const autoSetupBtn = document.getElementById('autoSetupBtn');
+                const closeAutoTradingModal = document.getElementById('closeAutoTradingModal');
+                const saveAutoTradingBtn = document.getElementById('saveAutoTradingBtn');
+                const disableAutoTradingBtn = document.getElementById('disableAutoTradingBtn');
+                const autoTradingToggle = document.getElementById('autoTradingToggle');
+                const timeframeFilterToggle = document.getElementById('timeframeFilterToggle');
+                const timeframeOptions = document.querySelectorAll('.timeframe-option');
+                const strengthFilter = document.getElementById('strengthFilter');
                 
                 // Mobile menu toggle
                 mobileMenu.addEventListener('click', () => {
@@ -1678,6 +2008,49 @@
                 deleteProfileBtn.addEventListener('click', () => {
                     this.deleteProfile();
                 });
+                
+                // Auto trading modal
+                autoSetupBtn.addEventListener('click', () => {
+                    this.openAutoTradingModal();
+                });
+                
+                closeAutoTradingModal.addEventListener('click', () => {
+                    document.getElementById('autoTradingModal').style.display = 'none';
+                });
+                
+                saveAutoTradingBtn.addEventListener('click', () => {
+                    this.saveAutoTradingSettings();
+                });
+                
+                disableAutoTradingBtn.addEventListener('click', () => {
+                    this.disableAutoTrading();
+                });
+                
+                // Auto trading settings
+                autoTradingToggle.addEventListener('change', () => {
+                    this.autoTrading.enabled = autoTradingToggle.checked;
+                });
+                
+                timeframeFilterToggle.addEventListener('change', () => {
+                    this.autoTrading.timeframeFilter = timeframeFilterToggle.checked;
+                });
+                
+                // UPDATED: Multiple timeframe selection
+                timeframeOptions.forEach(option => {
+                    option.addEventListener('click', () => {
+                        option.classList.toggle('active');
+                        
+                        // Update selected timeframes
+                        const activeTimeframes = Array.from(document.querySelectorAll('.timeframe-option.active'))
+                            .map(el => el.getAttribute('data-timeframe'));
+                        
+                        this.autoTrading.selectedTimeframes = activeTimeframes;
+                    });
+                });
+                
+                strengthFilter.addEventListener('change', () => {
+                    this.autoTrading.minStrength = strengthFilter.value;
+                });
             }
             
             // Open profile modal
@@ -1688,6 +2061,25 @@
                 document.getElementById('profileModal').style.display = 'flex';
             }
             
+            // Open auto trading modal
+            openAutoTradingModal() {
+                document.getElementById('autoTradingToggle').checked = this.autoTrading.enabled;
+                document.getElementById('autoTradeAmount').value = this.autoTrading.amount;
+                document.getElementById('autoTradeLeverage').value = this.autoTrading.leverage;
+                document.getElementById('timeframeFilterToggle').checked = this.autoTrading.timeframeFilter;
+                document.getElementById('strengthFilter').value = this.autoTrading.minStrength;
+                
+                // Update timeframe selector
+                document.querySelectorAll('.timeframe-option').forEach(option => {
+                    option.classList.remove('active');
+                    if (this.autoTrading.selectedTimeframes.includes(option.getAttribute('data-timeframe'))) {
+                        option.classList.add('active');
+                    }
+                });
+                
+                document.getElementById('autoTradingModal').style.display = 'flex';
+            }
+            
             // Save profile data from modal
             saveProfileData() {
                 this.profile.name = document.getElementById('profileName').value || 'Trader';
@@ -1696,6 +2088,33 @@
                 
                 this.saveProfile();
                 document.getElementById('profileModal').style.display = 'none';
+                this.updateLeaderboard(); // Update leaderboard with new name
+            }
+            
+            // Save auto trading settings
+            saveAutoTradingSettings() {
+                this.autoTrading.enabled = document.getElementById('autoTradingToggle').checked;
+                this.autoTrading.amount = parseFloat(document.getElementById('autoTradeAmount').value) || 1000;
+                this.autoTrading.leverage = parseInt(document.getElementById('autoTradeLeverage').value) || 100;
+                this.autoTrading.timeframeFilter = document.getElementById('timeframeFilterToggle').checked;
+                this.autoTrading.minStrength = document.getElementById('strengthFilter').value;
+                
+                this.saveProfile();
+                document.getElementById('autoTradingModal').style.display = 'none';
+                
+                if (this.autoTrading.enabled) {
+                    this.showNotification('Auto trading enabled! The bot will now execute trades based on live signals.');
+                } else {
+                    this.showNotification('Auto trading settings saved.');
+                }
+            }
+            
+            // Disable auto trading
+            disableAutoTrading() {
+                this.autoTrading.enabled = false;
+                document.getElementById('autoTradingToggle').checked = false;
+                this.saveProfile();
+                this.showNotification('Auto trading disabled.');
             }
             
             // Page switching
@@ -1728,17 +2147,11 @@
             // Trading functionality
             initializeTrading() {
                 const executeBtn = document.getElementById('executeTradeBtn');
-                const autoSetupBtn = document.getElementById('autoSetupBtn');
                 const stopBotBtn = document.getElementById('stopBotBtn');
                 
                 // Execute trade
                 executeBtn.addEventListener('click', () => {
                     this.executeTrade();
-                });
-                
-                // Auto setup
-                autoSetupBtn.addEventListener('click', () => {
-                    this.autoSetupTrade();
                 });
                 
                 // Stop bot
@@ -1797,19 +2210,35 @@
             }
             
             // Execute a new trade
-            executeTrade() {
-                const crypto = document.getElementById('cryptoSelect').value;
-                const direction = document.getElementById('directionSelect').value;
-                const amount = parseFloat(document.getElementById('amountInput').value);
-                const leverageText = document.getElementById('leverageSelect').value;
-                const leverage = parseInt(leverageText);
+            executeTrade(signal = null) {
+                let crypto, direction, amount, leverage, stopLoss, takeProfit;
+                
+                if (signal) {
+                    // Use signal parameters for auto trading
+                    crypto = signal.crypto + '/USD';
+                    direction = signal.type === 'BUY' ? 'Buy/Long' : 'Sell/Short';
+                    amount = this.autoTrading.amount;
+                    leverage = this.autoTrading.leverage;
+                    stopLoss = signal.stopLoss;
+                    takeProfit = signal.takeProfit1;
+                } else {
+                    // Use UI inputs for manual trading
+                    crypto = document.getElementById('cryptoSelect').value;
+                    direction = document.getElementById('directionSelect').value;
+                    amount = parseFloat(document.getElementById('amountInput').value);
+                    const leverageText = document.getElementById('leverageSelect').value;
+                    leverage = parseInt(leverageText);
+                    stopLoss = parseFloat(document.getElementById('stopLossInput').value);
+                    takeProfit = parseFloat(document.getElementById('takeProfitInput').value);
+                }
                 
                 // Get current price for the selected crypto
-                const currentPrice = this.marketData[crypto.split('/')[0]]?.price || 0;
+                const cryptoKey = crypto.split('/')[0];
+                const currentPrice = this.marketData[cryptoKey]?.price || 0;
                 
                 if (currentPrice === 0) {
                     this.showNotification('Error: Could not get current price');
-                    return;
+                    return false;
                 }
                 
                 // Create new position
@@ -1821,15 +2250,23 @@
                     currentPrice: currentPrice,
                     amount: amount,
                     leverage: leverage,
+                    stopLoss: stopLoss,
+                    takeProfit: takeProfit,
                     pnl: 0,
-                    timestamp: new Date()
+                    timestamp: new Date(),
+                    source: signal ? 'auto' : 'manual'
                 };
                 
                 this.openPositions.push(newPosition);
                 this.updateTradingUI();
                 this.saveProfile(); // Save after executing trade
                 
-                this.showNotification(`${direction} order for $${amount} of ${crypto} executed with ${leverage}x leverage!`);
+                const message = signal ? 
+                    `Auto trade: ${direction} order for $${amount} of ${crypto} executed with ${leverage}x leverage!` :
+                    `${direction} order for $${amount} of ${crypto} executed with ${leverage}x leverage!`;
+                
+                this.showNotification(message);
+                return true;
             }
             
             // Close a trade
@@ -1850,7 +2287,8 @@
                     amount: position.amount,
                     pnl: position.pnl,
                     status: 'CLOSED',
-                    timestamp: new Date()
+                    timestamp: new Date(),
+                    source: position.source
                 });
                 
                 // Update balance
@@ -1862,15 +2300,6 @@
                 this.updateTradingUI();
                 this.saveProfile(); // Save after closing trade
                 this.showNotification(`Trade closed with P&L: $${position.pnl.toFixed(2)}`);
-            }
-            
-            // Auto setup trade parameters
-            autoSetupTrade() {
-                // In a real app, this would use AI to set optimal parameters
-                document.getElementById('stopLossInput').value = '62000';
-                document.getElementById('takeProfitInput').value = '65800';
-                
-                this.showNotification('Auto setup applied to trading parameters');
             }
             
             // Toggle bot status
@@ -1896,6 +2325,7 @@
                 this.updateOpenPositions();
                 this.updateTradeHistory();
                 this.updatePaperBalance();
+                this.updateLeaderboard(); // Update leaderboard when trades change
             }
             
             // Update open positions display
@@ -1911,6 +2341,7 @@
                 this.openPositions.forEach(position => {
                     const pnlClass = position.pnl >= 0 ? 'positive' : 'negative';
                     const pnlSign = position.pnl >= 0 ? '+' : '';
+                    const sourceTag = position.source === 'auto' ? '<span style="color: var(--primary); font-size: 10px;">AUTO</span>' : '';
                     
                     const positionEl = document.createElement('div');
                     positionEl.style.display = 'flex';
@@ -1921,7 +2352,7 @@
                     
                     positionEl.innerHTML = `
                         <div>
-                            <div class="crypto-name">${position.pair}</div>
+                            <div class="crypto-name">${position.pair} ${sourceTag}</div>
                             <div class="crypto-symbol">${position.type} • ${position.leverage}x</div>
                         </div>
                         <div style="text-align: right;">
@@ -1952,6 +2383,7 @@
                     const pnlClass = trade.pnl >= 0 ? 'positive' : 'negative';
                     const pnlSign = trade.pnl >= 0 ? '+' : '';
                     const timeStr = this.formatTime(trade.timestamp);
+                    const sourceTag = trade.source === 'auto' ? '<span style="color: var(--primary); font-size: 9px;">AUTO</span>' : '';
                     
                     const row = document.createElement('tr');
                     
@@ -1963,7 +2395,7 @@
                                     <i class="fab fa-${trade.pair.split('/')[0].toLowerCase()}"></i>
                                 </div>
                                 <div>
-                                    <div class="crypto-name">${trade.pair.split('/')[0]}</div>
+                                    <div class="crypto-name">${trade.pair.split('/')[0]} ${sourceTag}</div>
                                 </div>
                             </div>
                         </td>
@@ -2273,48 +2705,6 @@
                     `;
                     
                     container.appendChild(row);
-                });
-            }
-            
-            // Leaderboard
-            initializeLeaderboard() {
-                this.leaderboardData = [
-                    { rank: 1, name: 'CryptoWhale', pnl: 5420.50 },
-                    { rank: 2, name: 'BitcoinBull', pnl: 3875.25 },
-                    { rank: 3, name: 'EtherMaster', pnl: 2980.75 },
-                    { rank: 4, name: 'AltcoinKing', pnl: 2450.30 },
-                    { rank: 5, name: 'TradingPro', pnl: 1985.60 },
-                    { rank: 6, name: 'CryptoNovice', pnl: 1250.40 },
-                    { rank: 7, name: 'BlockchainFan', pnl: 980.25 },
-                    { rank: 8, name: 'DigitalTrader', pnl: 750.80 },
-                    { rank: 9, name: 'HODLer', pnl: 520.45 },
-                    { rank: 10, name: 'Newbie', pnl: 250.30 }
-                ];
-                
-                this.updateLeaderboard();
-            }
-            
-            // Update leaderboard display
-            updateLeaderboard() {
-                const container = document.getElementById('leaderboardList');
-                container.innerHTML = '';
-                
-                this.leaderboardData.forEach(trader => {
-                    const pnlClass = trader.pnl >= 0 ? 'positive' : 'negative';
-                    const pnlSign = trader.pnl >= 0 ? '+' : '';
-                    
-                    const item = document.createElement('div');
-                    item.className = 'leaderboard-item';
-                    
-                    item.innerHTML = `
-                        <div style="display: flex; align-items: center;">
-                            <div class="leaderboard-rank">${trader.rank}</div>
-                            <div class="leaderboard-name">${trader.name}</div>
-                        </div>
-                        <div class="leaderboard-pnl ${pnlClass}">${pnlSign}$${trader.pnl.toFixed(2)}</div>
-                    `;
-                    
-                    container.appendChild(item);
                 });
             }
             
@@ -2642,7 +3032,36 @@
                 
                 this.updateSignalsDisplay();
                 
+                // Check if auto trading is enabled and execute trade if conditions match
+                if (this.autoTrading.enabled) {
+                    this.checkAutoTradingConditions(newSignal);
+                }
+                
                 this.showNotification(`New ${type} signal for ${crypto} on ${timeframe} timeframe!`);
+            }
+            
+            // UPDATED: Check if a signal meets auto trading conditions with multiple timeframe support
+            checkAutoTradingConditions(signal) {
+                // Check timeframe filter
+                if (this.autoTrading.timeframeFilter) {
+                    if (!this.autoTrading.selectedTimeframes.includes(signal.timeframe)) {
+                        return; // Signal timeframe doesn't match filter
+                    }
+                }
+                
+                // Check strength filter
+                if (this.autoTrading.minStrength !== 'all') {
+                    const strengthOrder = { 'weak': 0, 'medium': 1, 'strong': 2 };
+                    const signalStrength = strengthOrder[signal.strength] || 0;
+                    const minStrength = strengthOrder[this.autoTrading.minStrength] || 0;
+                    
+                    if (signalStrength < minStrength) {
+                        return; // Signal strength doesn't meet minimum
+                    }
+                }
+                
+                // All conditions met, execute trade
+                this.executeTrade(signal);
             }
             
             // Live updates
@@ -2685,6 +3104,19 @@
                                 position.pnl = position.type === 'BUY' ? 
                                     priceDiff * position.amount * position.leverage / position.entryPrice :
                                     -priceDiff * position.amount * position.leverage / position.entryPrice;
+                                    
+                                // Check for stop loss or take profit
+                                if (position.stopLoss && position.takeProfit) {
+                                    if (position.type === 'BUY') {
+                                        if (position.currentPrice <= position.stopLoss || position.currentPrice >= position.takeProfit) {
+                                            this.closeTrade(position.id);
+                                        }
+                                    } else {
+                                        if (position.currentPrice >= position.stopLoss || position.currentPrice <= position.takeProfit) {
+                                            this.closeTrade(position.id);
+                                        }
+                                    }
+                                }
                             }
                         }
                     });
